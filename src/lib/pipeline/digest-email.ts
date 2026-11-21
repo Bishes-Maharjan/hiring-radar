@@ -27,6 +27,54 @@ function createEmailTransport(user: string, pass: string) {
 }
 
 /**
+ * Cleans and formats email sender and recipient for RFC 5321 / RFC 5322 compliance.
+ * Prevents Gmail SMTP 555-5.5.2 syntax errors caused by escaped backslashes or malformed envelopes.
+ */
+export function sanitizeMailAddresses(
+  mailFrom: string,
+  mailTo: string,
+  smtpUser: string,
+): { from: { name: string; address: string }; to: string } {
+  const cleanFrom = (mailFrom || "")
+    .replace(/\\/g, "")
+    .trim()
+    .replace(/^["']|["']$/g, "");
+  const cleanTo = (mailTo || "")
+    .replace(/\\/g, "")
+    .trim()
+    .replace(/^["']|["']$/g, "");
+
+  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  const fromEmailMatch = cleanFrom.match(emailRegex);
+  const fallbackEmail = (smtpUser || "").trim().replace(/^["']|["']$/g, "");
+
+  let address = fromEmailMatch ? fromEmailMatch[0] : fallbackEmail;
+  if (address.endsWith(".local") && fallbackEmail) {
+    address = fallbackEmail;
+  }
+
+  let name = "Hiring Radar";
+  const nameMatch = cleanFrom.match(/^(.*?)(?:<.*?>|$)/);
+  if (nameMatch && nameMatch[1].trim()) {
+    name = nameMatch[1].replace(/["']/g, "").trim();
+  }
+  if (!name || name === address) {
+    name = "Hiring Radar";
+  }
+
+  const toEmailMatch = cleanTo.match(emailRegex);
+  const toAddress = toEmailMatch ? toEmailMatch[0] : cleanTo;
+
+  return {
+    from: {
+      name,
+      address,
+    },
+    to: toAddress,
+  };
+}
+
+/**
  * Orchestrates querying eligible matches, generating the HTML digest,
  * and dispatching via Gmail SMTP or previewing in DRY_RUN mode.
  */
@@ -102,10 +150,16 @@ export async function sendDailyDigest(
       config.SMTP_PASS,
     );
 
-    console.log(`📧 Sending daily digest to ${config.MAIL_TO}...`);
+    const { from, to } = sanitizeMailAddresses(
+      config.MAIL_FROM,
+      config.MAIL_TO,
+      config.SMTP_USER,
+    );
+
+    console.log(`📧 Sending daily digest to ${to} (from: "${from.name}" <${from.address}>)...`);
     const info = await transporter.sendMail({
-      from: config.MAIL_FROM,
-      to: config.MAIL_TO,
+      from,
+      to,
       subject,
       html,
     });

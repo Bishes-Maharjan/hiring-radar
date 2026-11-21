@@ -131,7 +131,7 @@ CRON_SECRET="generate_a_random_secret_token"
 # Email Delivery (Gmail App Password)
 SMTP_USER="your_email@gmail.com"
 SMTP_PASS="your_16_character_gmail_app_password"
-MAIL_FROM="\"Hiring Radar\" <your_email@gmail.com>"
+MAIL_FROM="Hiring Radar <your_email@gmail.com>"
 MAIL_TO="your_email@gmail.com"
 
 # Settings

@@ -28,7 +28,7 @@ export const ConfigSchema = z
     GMAIL_APP_PASSWORD: z.string().optional(),
     SMTP_USER: z.string().default(""),
     SMTP_PASS: z.string().default(""),
-    MAIL_FROM: z.string().default('"Hiring Radar" <noreply@hiringradar.local>'),
+    MAIL_FROM: z.string().default("Hiring Radar"),
     MAIL_TO: z.string().default(""),
     RESEND_API_KEY: z.string().optional(),
 

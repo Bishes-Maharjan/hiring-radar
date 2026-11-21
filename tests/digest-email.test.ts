@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateDigestHtml } from "@/lib/email/template";
+import { sanitizeMailAddresses } from "@/lib/pipeline/digest-email";
 import { Post, PostStatus } from "@prisma/client";
 
 describe("Email Digest Generation", () => {
@@ -77,5 +78,32 @@ describe("Email Digest Generation", () => {
     expect(html).toContain("https://www.linkedin.com/posts/example-lead-1");
     expect(html).toContain("Excited to share our new boot camp cohort details!");
     expect(html).toContain("https://www.linkedin.com/posts/example-lead-2");
+  });
+
+  it("sanitizes mail addresses with escaped quotes and ensures RFC compliance", () => {
+    const res1 = sanitizeMailAddresses(
+      '\\"Hiring Radar\\" <user@gmail.com>',
+      '"dest@gmail.com"',
+      "user@gmail.com",
+    );
+    expect(res1.from.name).toBe("Hiring Radar");
+    expect(res1.from.address).toBe("user@gmail.com");
+    expect(res1.to).toBe("dest@gmail.com");
+
+    const res2 = sanitizeMailAddresses(
+      "Hiring Radar",
+      "dest@gmail.com",
+      "user@gmail.com",
+    );
+    expect(res2.from.name).toBe("Hiring Radar");
+    expect(res2.from.address).toBe("user@gmail.com");
+
+    const res3 = sanitizeMailAddresses(
+      '"Hiring Radar" <noreply@hiringradar.local>',
+      "dest@gmail.com",
+      "user@gmail.com",
+    );
+    expect(res3.from.name).toBe("Hiring Radar");
+    expect(res3.from.address).toBe("user@gmail.com");
   });
 });
