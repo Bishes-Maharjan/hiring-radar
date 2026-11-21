@@ -13,8 +13,11 @@ export const maxDuration = 60;
  */
 export function safeTimingCompare(token: string, secret: string): boolean {
   if (!token || !secret) return false;
-  const bufToken = Buffer.from(token);
-  const bufSecret = Buffer.from(secret);
+  const cleanToken = token.trim().replace(/^["']|["']$/g, "");
+  const cleanSecret = secret.trim().replace(/^["']|["']$/g, "");
+
+  const bufToken = Buffer.from(cleanToken);
+  const bufSecret = Buffer.from(cleanSecret);
 
   if (bufToken.length !== bufSecret.length) {
     // Perform dummy timing comparison on identical buffer to neutralize timing differences
