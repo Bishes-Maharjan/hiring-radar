@@ -3,11 +3,12 @@ import fs from "fs";
 import path from "path";
 import { getConfig } from "./config";
 import { getPostsForEmailDigest, markPostsAsEmailed } from "../db/repository";
-import { generateDigestHtml } from "../email/template";
+import { generateDigestHtml, RawDiscoveredLead } from "../email/template";
 
 export interface DigestEmailResult {
   emailSent: boolean;
   matchCount: number;
+  otherLeadCount?: number;
   error?: string;
   previewPath?: string;
 }
@@ -29,29 +30,35 @@ function createEmailTransport(user: string, pass: string) {
  * Orchestrates querying eligible matches, generating the HTML digest,
  * and dispatching via Gmail SMTP or previewing in DRY_RUN mode.
  */
-export async function sendDailyDigest(): Promise<DigestEmailResult> {
+export async function sendDailyDigest(
+  otherLeads: RawDiscoveredLead[] = [],
+): Promise<DigestEmailResult> {
   const config = getConfig();
   const dateFormatted = new Date().toISOString().split("T")[0];
 
   // 1. Fetch un-emailed posts with score >= MIN_SCORE
   const matches = await getPostsForEmailDigest(config.MIN_SCORE);
   console.log(
-    `📬 Email digest query: found ${matches.length} eligible posts (fitScore >= ${config.MIN_SCORE}, un-emailed).`,
+    `📬 Email digest query: found ${matches.length} eligible posts (fitScore >= ${config.MIN_SCORE}, un-emailed), and ${otherLeads.length} other scanned leads.`,
   );
 
-  if (matches.length === 0 && !config.ALWAYS_SEND) {
+  if (matches.length === 0 && otherLeads.length === 0 && !config.ALWAYS_SEND) {
     console.log(
-      "ℹ️ No new matches to email today and ALWAYS_SEND=false. Skipping email.",
+      "ℹ️ No new matches or scanned leads to email today and ALWAYS_SEND=false. Skipping email.",
     );
     return {
       emailSent: false,
       matchCount: 0,
+      otherLeadCount: 0,
     };
   }
 
   // 2. Generate HTML email content
-  const html = generateDigestHtml(matches, config.NEXT_PUBLIC_APP_URL);
-  const subject = `Hiring Radar: ${matches.length} new match${matches.length === 1 ? "" : "es"} (${dateFormatted})`;
+  const html = generateDigestHtml(matches, config.NEXT_PUBLIC_APP_URL, otherLeads);
+  const subject =
+    matches.length > 0
+      ? `Hiring Radar: ${matches.length} match${matches.length === 1 ? "" : "es"} (${otherLeads.length} other scanned) - ${dateFormatted}`
+      : `Hiring Radar: 0 top matches (${otherLeads.length} leads scanned) - ${dateFormatted}`;
 
   // 3. Handle DRY_RUN mode: save to out/preview.html
   if (config.DRY_RUN) {
@@ -71,6 +78,7 @@ export async function sendDailyDigest(): Promise<DigestEmailResult> {
     return {
       emailSent: true,
       matchCount: matches.length,
+      otherLeadCount: otherLeads.length,
       previewPath: previewFile,
     };
   }
@@ -83,6 +91,7 @@ export async function sendDailyDigest(): Promise<DigestEmailResult> {
     return {
       emailSent: false,
       matchCount: matches.length,
+      otherLeadCount: otherLeads.length,
       error: "SMTP credentials not configured",
     };
   }
@@ -111,6 +120,7 @@ export async function sendDailyDigest(): Promise<DigestEmailResult> {
     return {
       emailSent: true,
       matchCount: matches.length,
+      otherLeadCount: otherLeads.length,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -118,6 +128,7 @@ export async function sendDailyDigest(): Promise<DigestEmailResult> {
     return {
       emailSent: false,
       matchCount: matches.length,
+      otherLeadCount: otherLeads.length,
       error: message,
     };
   }

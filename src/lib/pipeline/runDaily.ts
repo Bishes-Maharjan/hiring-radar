@@ -7,6 +7,7 @@ import { persistPipelineResults } from "./persist";
 import { sendDailyDigest } from "./digest-email";
 import { startRun, finishRun } from "../db/repository";
 import { CandidatePost, PipelineRunResult } from "./types";
+import { RawDiscoveredLead } from "../email/template";
 
 /**
  * Main Daily Pipeline Orchestrator.
@@ -62,6 +63,8 @@ export async function runDailyPipeline(): Promise<PipelineRunResult> {
     const { newCandidates } = await deduplicateCandidates(allCandidates);
     newCandidatesCount = newCandidates.length;
 
+    let otherLeads: RawDiscoveredLead[] = [];
+
     if (newCandidates.length === 0) {
       console.log(
         "ℹ️ No new unseen posts found in this run. Moving to email check...",
@@ -77,10 +80,25 @@ export async function runDailyPipeline(): Promise<PipelineRunResult> {
 
       // 7. Persist to database (Post and SeenKey tables)
       await persistPipelineResults(hiringPosts, nonHiringDedupeKeys);
+
+      // Collect other leads: anything in newCandidates that wasn't scored >= MIN_SCORE
+      const highMatchKeys = new Set(
+        hiringPosts
+          .filter((p) => p.fitScore >= config.MIN_SCORE)
+          .map((p) => p.dedupeKey),
+      );
+
+      otherLeads = newCandidates
+        .filter((c) => !highMatchKeys.has(c.dedupeKey))
+        .map((c) => ({
+          url: c.url,
+          snippet: c.snippet,
+          sourceQuery: c.sourceQuery,
+        }));
     }
 
     // 8. Generate & Send Email Digest (or out/preview.html in DRY_RUN)
-    const emailResult = await sendDailyDigest();
+    const emailResult = await sendDailyDigest(otherLeads);
     emailSent = emailResult.emailSent;
   } catch (err: unknown) {
     pipelineError = err instanceof Error ? err.message : String(err);

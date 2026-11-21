@@ -56,4 +56,26 @@ describe("Email Digest Generation", () => {
 
     expect(html).toContain("No new high-match hiring posts found today");
   });
+
+  it("renders other scanned leads when provided", () => {
+    const otherLeads = [
+      {
+        url: "https://www.linkedin.com/posts/example-lead-1",
+        snippet: "Looking for software engineering opportunities in Nepal.",
+        sourceQuery: "site:linkedin.com/posts hiring backend Nepal",
+      },
+      {
+        url: "https://www.linkedin.com/posts/example-lead-2",
+        snippet: "Excited to share our new boot camp cohort details!",
+      },
+    ];
+
+    const html = generateDigestHtml([], "http://localhost:3000", otherLeads);
+
+    expect(html).toContain("Other Scanned Leads (2)");
+    expect(html).toContain("Looking for software engineering opportunities in Nepal.");
+    expect(html).toContain("https://www.linkedin.com/posts/example-lead-1");
+    expect(html).toContain("Excited to share our new boot camp cohort details!");
+    expect(html).toContain("https://www.linkedin.com/posts/example-lead-2");
+  });
 });
