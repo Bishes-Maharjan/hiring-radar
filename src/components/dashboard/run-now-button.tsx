@@ -62,11 +62,10 @@ export function RunNowButton({ isDemo }: RunNowButtonProps) {
             ? "Disabled in the demo: pipeline runs cannot be triggered in showcase mode"
             : "Trigger an immediate search and classification run"
         }
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-colors shrink-0 shadow-xs ${
-          isDemo
-            ? "bg-slate-400 cursor-not-allowed opacity-75"
-            : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
-        }`}
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-colors shrink-0 shadow-xs ${isDemo
+          ? "bg-slate-400 cursor-not-allowed opacity-75"
+          : "bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50"
+          }`}
       >
         {isPending ? (
           <>
@@ -101,13 +100,12 @@ export function RunNowButton({ isDemo }: RunNowButtonProps) {
 
       {feedback && (
         <div
-          className={`text-[11px] px-2.5 py-1 rounded-md border animate-in fade-in duration-200 ${
-            feedback.type === "success"
-              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-              : feedback.type === "info"
-                ? "bg-amber-50 text-amber-900 border-amber-200"
-                : "bg-red-50 text-red-800 border-red-200"
-          }`}
+          className={`text-[11px] px-2.5 py-1 rounded-md border animate-in fade-in duration-200 ${feedback.type === "success"
+            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+            : feedback.type === "info"
+              ? "bg-amber-50 text-amber-900 border-amber-200"
+              : "bg-red-50 text-red-800 border-red-200"
+            }`}
         >
           {feedback.message}
         </div>

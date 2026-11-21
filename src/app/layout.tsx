@@ -21,11 +21,11 @@ export function generateMetadata(): Metadata {
     description: "Curated AI and backend hiring lead discovery system",
     robots: inDemo
       ? {
-          index: false,
-          follow: false,
-          noarchive: true,
-          nosnippet: true,
-        }
+        index: false,
+        follow: false,
+        noarchive: true,
+        nosnippet: true,
+      }
       : undefined,
   };
 }

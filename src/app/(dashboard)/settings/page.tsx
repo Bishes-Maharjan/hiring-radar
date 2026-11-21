@@ -15,22 +15,22 @@ export default async function SettingsPage() {
   // In demo mode, NEVER display real profile data, keys, or emails from database
   const settings = inDemo
     ? {
-        id: "default",
-        fullName: "Demo Candidate (Public Profile)",
-        email: "candidate@example.com",
-        phone: "+977 9800000000",
-        location: "Kathmandu, Nepal",
-        education: "BCA / Computer Science, Demo University",
-        seeking: "Junior Backend and AI Engineering Roles",
-        githubUrl: "github.com/example-demo",
-        linkedinUrl: "linkedin.com/in/demo-candidate",
-        portfolioUrl: "https://demo.example.com",
-        personalDescription: `[DEMO SHOWCASE: Profile details are masked for public showcase demonstration.]
+      id: "default",
+      fullName: "Demo Candidate (Public Profile)",
+      email: "candidate@example.com",
+      phone: "+977 9800000000",
+      location: "Kathmandu, Nepal",
+      education: "BCA / Computer Science, Demo University",
+      seeking: "Junior Backend and AI Engineering Roles",
+      githubUrl: "github.com/example-demo",
+      linkedinUrl: "linkedin.com/in/demo-candidate",
+      portfolioUrl: "https://demo.example.com",
+      personalDescription: `[DEMO SHOWCASE: Profile details are masked for public showcase demonstration.]
 
 Core Stack: TypeScript, Node.js, Next.js, Python, PostgreSQL, Prisma, Pinecone RAG.
 Specializes in building robust APIs, background workers, and AI workflow automations.`,
-        updatedAt: new Date(),
-      }
+      updatedAt: new Date(),
+    }
     : dbSettings;
 
   return (
