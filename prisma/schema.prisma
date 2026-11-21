@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PostStatus {
+  NEW
+  SAVED
+  APPLIED
+  DISMISSED
+}
+
+model Post {
+  id              String     @id @default(cuid())
+  dedupeKey       String     @unique
+  url             String     @db.Text
+  urlKind         String // "linkedin" | "wrapped"
+  snippet         String     @db.Text
+  postedAt        DateTime?
+  foundAt         DateTime   @default(now())
+  sourceQuery     String
+  isHiringPost    Boolean    @default(true)
+  role            String
+  company         String
+  location        String
+  workMode        String // "onsite" | "hybrid" | "remote" | "unknown"
+  experienceLevel String // "intern" | "junior" | "mid" | "senior" | "unknown"
+  applyType       String // "email" | "link" | "dm" | "unknown"
+  applyValue      String?    @db.Text
+  fitScore        Int // 1 - 10
+  reason          String     @db.Text
+  draftSubject    String?    @db.Text
+  draftBody       String?    @db.Text
+  status          PostStatus @default(NEW)
+  emailedAt       DateTime?
+
+  @@index([status, fitScore])
+  @@index([foundAt])
+}
+
+model SeenKey {
+  id        String   @id @default(cuid())
+  dedupeKey String   @unique
+  seenAt    DateTime @default(now())
+
+  @@index([seenAt])
+}
+
+model Run {
+  id           String    @id @default(cuid())
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  queriesUsed  Int       @default(0)
+  resultsFound Int       @default(0)
+  newPosts     Int       @default(0)
+  hiringPosts  Int       @default(0)
+  emailSent    Boolean   @default(false)
+  error        String?   @db.Text
+
+  @@index([startedAt(sort: Desc)])
+}
+
+model Settings {
+  id                  String   @id @default("default")
+  fullName            String   @default("")
+  email               String   @default("")
+  phone               String   @default("")
+  location            String   @default("")
+  education           String   @default("")
+  seeking             String   @default("")
+  githubUrl           String   @default("")
+  linkedinUrl         String   @default("")
+  portfolioUrl        String?
+  personalDescription String   @default("") @db.Text
+  updatedAt           DateTime @updatedAt
+}

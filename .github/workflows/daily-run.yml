@@ -1,0 +1,58 @@
+name: Daily Hiring Radar Pipeline
+
+on:
+  schedule:
+    # 07:00 AM Nepal Time (UTC+5:45) is 01:15 AM UTC daily
+    - cron: "15 1 * * *"
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Reason for manual trigger"
+        required: false
+        default: "Manual run from GitHub Actions UI"
+
+# Ensure multiple runs never overlap or double-process
+concurrency:
+  group: hiring-radar-daily-run
+  cancel-in-progress: false
+
+jobs:
+  trigger-pipeline:
+    name: Trigger Hiring Radar API
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Validate Secrets
+        run: |
+          if [ -z "${{ secrets.APP_URL }}" ]; then
+            echo "::error::APP_URL secret is not set!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.CRON_SECRET }}" ]; then
+            echo "::error::CRON_SECRET secret is not set!"
+            exit 1
+          fi
+
+      - name: Trigger Daily Pipeline via API
+        run: |
+          echo "📡 Triggering POST ${{ secrets.APP_URL }}/api/cron/run at $(date -u)"
+
+          RESPONSE=$(curl -sS -w "\nHTTP_STATUS:%{http_code}\n" \
+            -X POST "${{ secrets.APP_URL }}/api/cron/run" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --max-time 120)
+
+          BODY=$(echo "$RESPONSE" | sed -e '$d')
+          STATUS=$(echo "$RESPONSE" | tail -n 1 | cut -d':' -f2)
+
+          echo "Response Body: $BODY"
+          echo "HTTP Status: $STATUS"
+
+          if [ "$STATUS" -ne 200 ]; then
+            echo "::error::Pipeline failed with HTTP status $STATUS: $BODY"
+            exit 1
+          fi
+
+          echo "✅ Pipeline executed successfully!"

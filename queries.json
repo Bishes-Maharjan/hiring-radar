@@ -1,0 +1,8 @@
+[
+  "site:linkedin.com/posts (hiring OR \"we are hiring\") (nestjs OR \"node.js\" OR backend) Nepal",
+  "site:linkedin.com/posts (hiring OR \"we are hiring\") (\"AI engineer\" OR \"machine learning\" OR python OR fastapi) Nepal",
+  "site:linkedin.com/posts (hiring OR \"we are hiring\") (nestjs OR \"node.js\" OR backend) remote",
+  "site:linkedin.com/posts (hiring OR \"we are hiring\") (\"AI engineer\" OR \"machine learning\" OR python OR fastapi) remote",
+  "site:linkedin.com/posts \"send your CV\" (developer OR engineer) Nepal",
+  "site:linkedin.com/posts (internship OR junior) (backend OR \"full stack\" OR AI) Nepal"
+]
