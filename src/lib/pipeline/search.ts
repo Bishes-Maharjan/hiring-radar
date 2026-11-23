@@ -26,7 +26,7 @@ export async function executeSingleSearch(
     hl: "en",
     gl: "np",
     tbs,
-    num: "20",
+    num: "40",
     api_key: apiKey,
   });
 
@@ -154,7 +154,7 @@ export async function executeSearchPipeline(): Promise<{
 
   for (const query of queriesToRun) {
     console.log(`📡 Fetching SerpApi: ${query}`);
-    const res = await executeSingleSearch(query, config.SERPAPI_KEY, "qdr:d");
+    const res = await executeSingleSearch(query, config.SERPAPI_KEY, "qdr:w");
     queryResults.push(res);
   }
 
