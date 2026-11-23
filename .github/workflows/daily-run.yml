@@ -2,8 +2,8 @@ name: Daily Hiring Radar Pipeline
 
 on:
   schedule:
-    # 07:00 AM Nepal Time (UTC+5:45) is 01:15 AM UTC every 2nd day
-    - cron: "15 1 */2 * *"
+    # 07:00 AM Nepal Time (UTC+5:45) is 01:15 AM UTC daily
+    - cron: "15 1 * * *"
   workflow_dispatch:
     inputs:
       reason:

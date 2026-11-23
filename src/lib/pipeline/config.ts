@@ -33,7 +33,7 @@ export const ConfigSchema = z
     RESEND_API_KEY: z.string().optional(),
 
     // Thresholds & Limits
-    MAX_QUERIES_PER_RUN: z.coerce.number().min(1).max(20).default(8),
+    MAX_QUERIES_PER_RUN: z.coerce.number().min(1).max(20).default(7),
     SEARCH_NUM: z.coerce.number().min(10).max(100).default(20),
     MAX_POST_AGE_DAYS: z.coerce.number().min(1).max(30).default(5),
     MIN_SCORE: z.coerce.number().min(1).max(10).default(6),
@@ -158,12 +158,11 @@ export function loadQueries(): string[] {
   // Fallback defaults if queries.json is missing or unreadable
   return [
     'site:linkedin.com/posts (hiring OR "we are hiring" OR "looking for") (nestjs OR "node.js" OR backend OR "full stack") (Nepal OR Kathmandu OR Lalitpur)',
-    'site:linkedin.com/posts ("send your CV" OR "share your resume" OR "apply at" OR "drop your CV") (developer OR engineer) (Nepal OR Kathmandu)',
+    'site:linkedin.com/posts ("send your CV" OR "share your resume" OR "apply at" OR "drop your CV" OR "subject line") (developer OR engineer OR intern) (Nepal OR Kathmandu)',
     'site:linkedin.com/posts (hiring OR "join our team") ("AI engineer" OR "machine learning" OR python OR fastapi) (Nepal OR Kathmandu)',
     'site:linkedin.com/posts (intern OR internship OR junior OR fresher) (backend OR developer OR software) (Nepal OR Kathmandu)',
     'site:linkedin.com/posts (#jobsinnepal OR #nepaltech OR #itjobs) (backend OR developer OR intern OR fresher)',
     'site:linkedin.com/posts ("Internship in Nepal" OR InternSathi OR "Freshers Jobs" OR TalentSathi OR Slicejob OR NecoJobs) (backend OR "full stack" OR python OR node OR AI)',
-    'site:linkedin.com/posts ("as the subject line" OR "subject line") (developer OR intern) (Nepal OR Kathmandu)',
     'site:linkedin.com/posts (hiring OR "we are hiring") (backend OR "full stack" OR "AI engineer") (remote OR "work from home") (Nepal OR Kathmandu)',
   ];
 }

@@ -1,10 +1,9 @@
 [
   "site:linkedin.com/posts (hiring OR \"we are hiring\" OR \"looking for\") (nestjs OR \"node.js\" OR backend OR \"full stack\") (Nepal OR Kathmandu OR Lalitpur)",
-  "site:linkedin.com/posts (\"send your CV\" OR \"share your resume\" OR \"apply at\" OR \"drop your CV\") (developer OR engineer) (Nepal OR Kathmandu)",
+  "site:linkedin.com/posts (\"send your CV\" OR \"share your resume\" OR \"apply at\" OR \"drop your CV\" OR \"subject line\") (developer OR engineer OR intern) (Nepal OR Kathmandu)",
   "site:linkedin.com/posts (hiring OR \"join our team\") (\"AI engineer\" OR \"machine learning\" OR python OR fastapi) (Nepal OR Kathmandu)",
   "site:linkedin.com/posts (intern OR internship OR junior OR fresher) (backend OR developer OR software) (Nepal OR Kathmandu)",
   "site:linkedin.com/posts (#jobsinnepal OR #nepaltech OR #itjobs) (backend OR developer OR intern OR fresher)",
   "site:linkedin.com/posts (\"Internship in Nepal\" OR InternSathi OR \"Freshers Jobs\" OR TalentSathi OR Slicejob OR NecoJobs) (backend OR \"full stack\" OR python OR node OR AI)",
-  "site:linkedin.com/posts (\"as the subject line\" OR \"subject line\") (developer OR intern) (Nepal OR Kathmandu)",
   "site:linkedin.com/posts (hiring OR \"we are hiring\") (backend OR \"full stack\" OR \"AI engineer\") (remote OR \"work from home\") (Nepal OR Kathmandu)"
 ]
