@@ -16,7 +16,8 @@ export interface SearchQueryResult {
 export async function executeSingleSearch(
   query: string,
   apiKey: string,
-  tbs = "qdr:d",
+  tbs = "qdr:w",
+  num = 20,
 ): Promise<SearchQueryResult> {
   const params = new URLSearchParams({
     engine: "google",
@@ -26,7 +27,7 @@ export async function executeSingleSearch(
     hl: "en",
     gl: "np",
     tbs,
-    num: "40",
+    num: String(num),
     api_key: apiKey,
   });
 
@@ -66,6 +67,9 @@ export async function executeSingleSearch(
         error: "Schema validation warning",
       };
     }
+
+    const count = parsed.data.organic_results.length;
+    console.log(`📊 Query "${query}" returned ${count} organic results.`);
 
     return {
       query,
@@ -147,14 +151,19 @@ export async function executeSearchPipeline(): Promise<{
 
   const queriesToRun = config.queries.slice(0, config.MAX_QUERIES_PER_RUN);
   console.log(
-    `🔍 Running search for ${queriesToRun.length} queries (capped at MAX_QUERIES_PER_RUN=${config.MAX_QUERIES_PER_RUN})...`,
+    `🔍 Running search for ${queriesToRun.length} queries (capped at MAX_QUERIES_PER_RUN=${config.MAX_QUERIES_PER_RUN}, num=${config.SEARCH_NUM})...`,
   );
 
   const queryResults: SearchQueryResult[] = [];
 
   for (const query of queriesToRun) {
     console.log(`📡 Fetching SerpApi: ${query}`);
-    const res = await executeSingleSearch(query, config.SERPAPI_KEY, "qdr:w");
+    const res = await executeSingleSearch(
+      query,
+      config.SERPAPI_KEY,
+      "qdr:w",
+      config.SEARCH_NUM,
+    );
     queryResults.push(res);
   }
 

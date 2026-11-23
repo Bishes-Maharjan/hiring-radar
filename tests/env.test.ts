@@ -27,7 +27,8 @@ describe("Environment & Config Validation", () => {
       "mock_google_client_id.apps.googleusercontent.com",
     );
     expect(config.CRON_SECRET).toBe("mock_cron_secret_abc123");
-    expect(config.MAX_QUERIES_PER_RUN).toBe(6);
+    expect(config.MAX_QUERIES_PER_RUN).toBe(8);
+    expect(config.SEARCH_NUM).toBe(20);
     expect(config.MIN_SCORE).toBe(6);
     expect(config.queries.length).toBeGreaterThan(0);
   });
