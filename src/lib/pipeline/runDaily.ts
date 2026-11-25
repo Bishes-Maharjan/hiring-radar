@@ -32,12 +32,16 @@ export async function runDailyPipeline(): Promise<PipelineRunResult> {
   let hiringPostsCount = 0;
   let emailSent = false;
   let pipelineError: string | null = null;
+  const pipelineWarnings: string[] = [];
 
   try {
     // 2. Search SerpApi (or load fixture in DRY_RUN)
     const searchOutcome = await executeSearchPipeline();
     queriesUsed = searchOutcome.queriesUsed;
     resultsFound = searchOutcome.totalRawResults;
+    if (searchOutcome.errors?.length) {
+      pipelineWarnings.push(...searchOutcome.errors);
+    }
 
     // 3. Flatten and parse raw search items into candidate posts
     const allCandidates: CandidatePost[] = [];
@@ -74,9 +78,12 @@ export async function runDailyPipeline(): Promise<PipelineRunResult> {
       const enriched = await enrichCandidatePosts(newCandidates);
 
       // 6. Gemini Batch Classification & Scoring
-      const { hiringPosts, nonHiringDedupeKeys } =
+      const { hiringPosts, nonHiringDedupeKeys, errors: geminiErrors } =
         await classifyCandidates(enriched);
       hiringPostsCount = hiringPosts.length;
+      if (geminiErrors?.length) {
+        pipelineWarnings.push(...geminiErrors);
+      }
 
       // 7. Persist to database (Post and SeenKey tables)
       await persistPipelineResults(hiringPosts, nonHiringDedupeKeys);
@@ -98,11 +105,16 @@ export async function runDailyPipeline(): Promise<PipelineRunResult> {
     }
 
     // 8. Generate & Send Email Digest (or out/preview.html in DRY_RUN)
-    const emailResult = await sendDailyDigest(otherLeads);
+    const emailResult = await sendDailyDigest(otherLeads, pipelineWarnings);
     emailSent = emailResult.emailSent;
   } catch (err: unknown) {
     pipelineError = err instanceof Error ? err.message : String(err);
     console.error("❌ Fatal error during pipeline execution:", pipelineError);
+    try {
+      await sendDailyDigest([], [pipelineError]);
+    } catch {
+      // Fail-soft if email dispatch itself fails
+    }
   } finally {
     const finishedAt = new Date();
     await finishRun(runRecord.id, {

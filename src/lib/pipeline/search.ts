@@ -129,6 +129,7 @@ export async function executeSearchPipeline(): Promise<{
   queryResults: SearchQueryResult[];
   queriesUsed: number;
   totalRawResults: number;
+  errors: string[];
 }> {
   const config = getConfig();
 
@@ -146,6 +147,7 @@ export async function executeSearchPipeline(): Promise<{
       ],
       queriesUsed: 0,
       totalRawResults: fixtureResults.length,
+      errors: [],
     };
   }
 
@@ -172,13 +174,18 @@ export async function executeSearchPipeline(): Promise<{
     0,
   );
 
+  const errors = queryResults
+    .filter((qr) => qr.error)
+    .map((qr) => `SerpApi failed for query "${qr.query}": ${qr.error}`);
+
   console.log(
-    `✅ Search completed: ${queriesToRun.length} queries used, ${totalRawResults} raw results collected.`,
+    `✅ Search completed: ${queriesToRun.length} queries used, ${totalRawResults} raw results collected, ${errors.length} query error(s).`,
   );
 
   return {
     queryResults,
     queriesUsed: queriesToRun.length,
     totalRawResults,
+    errors,
   };
 }

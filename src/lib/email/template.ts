@@ -24,8 +24,28 @@ export function generateDigestHtml(
   posts: Post[],
   dashboardUrl = "http://localhost:3000",
   otherLeads: RawDiscoveredLead[] = [],
+  pipelineErrors: string[] = [],
 ): string {
   const dateFormatted = new Date().toISOString().split("T")[0];
+
+  const errorsHtml =
+    pipelineErrors.length > 0
+      ? `
+      <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
+        <div style="font-size: 13px; font-weight: 700; color: #991b1b; margin-bottom: 6px;">
+          ⚠️ Pipeline Warnings & API Errors (${pipelineErrors.length})
+        </div>
+        <ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #b91c1c; line-height: 1.5;">
+          ${pipelineErrors
+            .map(
+              (e) =>
+                `<li>${e.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</li>`,
+            )
+            .join("")}
+        </ul>
+      </div>
+    `
+      : "";
 
   const cardsHtml = posts
     .map((p) => {
@@ -177,6 +197,9 @@ export function generateDigestHtml(
 
         <!-- Content Body -->
         <div style="padding: 20px; background-color: #f8fafc;">
+          <!-- Pipeline Errors / Warnings Alert -->
+          ${errorsHtml}
+
           <!-- Section 1: Relevant Matches -->
           ${
             posts.length > 0

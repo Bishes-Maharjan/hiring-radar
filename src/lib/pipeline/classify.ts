@@ -231,10 +231,11 @@ export async function classifyBatch(
   apiKey: string,
   modelName: string,
   systemInstruction?: string,
-): Promise<BatchClassificationResponse | null> {
+): Promise<{ data: BatchClassificationResponse | null; error?: string }> {
   const ai = new GoogleGenAI({ apiKey, apiVersion: "v1beta" });
   const prompt = buildBatchPrompt(batch);
   const sysPrompt = systemInstruction ?? buildSystemInstruction(EMPTY_SETTINGS);
+  let lastError: string | undefined;
 
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
@@ -250,7 +251,6 @@ export async function classifyBatch(
           temperature: 0.1,
           responseMimeType: "application/json",
           responseSchema: CLASSIFICATION_RESPONSE_SCHEMA,
-          thinkingConfig: { thinkingBudget: 0 },
         },
       });
 
@@ -259,21 +259,23 @@ export async function classifyBatch(
       const parsed = BatchClassificationResponseSchema.safeParse(rawJson);
 
       if (parsed.success) {
-        return parsed.data;
+        return { data: parsed.data };
       }
 
+      lastError = `Schema validation failed on ${modelName} output: ${parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ")}`;
       console.warn(
         `⚠️ Attempt ${attempt} validation failed:`,
         JSON.stringify(parsed.error.issues, null, 2),
         "\nRaw text was:\n",
         text,
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      lastError = err instanceof Error ? err.message : String(err);
       console.warn(`⚠️ Attempt ${attempt} error:`, err);
     }
   }
 
-  return null;
+  return { data: null, error: lastError };
 }
 
 /**
@@ -283,15 +285,17 @@ export async function classifyBatch(
 export async function classifyCandidates(candidates: CandidatePost[]): Promise<{
   hiringPosts: ClassifiedHiringPost[];
   nonHiringDedupeKeys: string[];
+  errors: string[];
 }> {
   if (candidates.length === 0) {
-    return { hiringPosts: [], nonHiringDedupeKeys: [] };
+    return { hiringPosts: [], nonHiringDedupeKeys: [], errors: [] };
   }
 
   const config = getConfig();
   const BATCH_SIZE = 10;
   const hiringPosts: ClassifiedHiringPost[] = [];
   const nonHiringDedupeKeys: string[] = [];
+  const errors: string[] = [];
 
   // Load user settings for dynamic prompt injection (safe fallback to empty template)
   let systemInstruction: string;
@@ -305,7 +309,7 @@ export async function classifyCandidates(candidates: CandidatePost[]): Promise<{
 
   for (let i = 0; i < candidates.length; i += BATCH_SIZE) {
     const batch = candidates.slice(i, i + BATCH_SIZE);
-    const result = await classifyBatch(
+    const { data: result, error: batchError } = await classifyBatch(
       batch,
       config.GEMINI_API_KEY,
       config.GEMINI_MODEL,
@@ -313,6 +317,9 @@ export async function classifyCandidates(candidates: CandidatePost[]): Promise<{
     );
 
     if (!result) {
+      if (batchError) {
+        errors.push(`Gemini batch error (${config.GEMINI_MODEL}): ${batchError}`);
+      }
       console.warn(
         `⚠️ Batch ${i / BATCH_SIZE + 1} failed after retry. Skipping without marking as seen so they can be re-tried later.`,
       );
@@ -359,8 +366,8 @@ export async function classifyCandidates(candidates: CandidatePost[]): Promise<{
   }
 
   console.log(
-    `🎯 Classification complete: ${candidates.length} posts evaluated -> ${hiringPosts.length} confirmed hiring posts, ${nonHiringDedupeKeys.length} rejected/non-hiring.`,
+    `🎯 Classification complete: ${candidates.length} posts evaluated -> ${hiringPosts.length} confirmed hiring posts, ${nonHiringDedupeKeys.length} rejected/non-hiring, ${errors.length} batch error(s).`,
   );
 
-  return { hiringPosts, nonHiringDedupeKeys };
+  return { hiringPosts, nonHiringDedupeKeys, errors };
 }

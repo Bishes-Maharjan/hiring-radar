@@ -80,6 +80,19 @@ describe("Email Digest Generation", () => {
     expect(html).toContain("https://www.linkedin.com/posts/example-lead-2");
   });
 
+  it("renders pipeline warning and error box when errors exist", () => {
+    const errors = [
+      "SerpApi failed for query 1: HTTP 429 Too Many Requests",
+      "Gemini batch error: Resource exhausted",
+    ];
+
+    const html = generateDigestHtml([], "http://localhost:3000", [], errors);
+
+    expect(html).toContain("Pipeline Warnings & API Errors (2)");
+    expect(html).toContain("HTTP 429 Too Many Requests");
+    expect(html).toContain("Gemini batch error: Resource exhausted");
+  });
+
   it("sanitizes mail addresses with escaped quotes and ensures RFC compliance", () => {
     const res1 = sanitizeMailAddresses(
       '\\"Hiring Radar\\" <user@gmail.com>',

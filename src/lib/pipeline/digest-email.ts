@@ -80,6 +80,7 @@ export function sanitizeMailAddresses(
  */
 export async function sendDailyDigest(
   otherLeads: RawDiscoveredLead[] = [],
+  pipelineErrors: string[] = [],
 ): Promise<DigestEmailResult> {
   const config = getConfig();
   const dateFormatted = new Date().toISOString().split("T")[0];
@@ -87,12 +88,17 @@ export async function sendDailyDigest(
   // 1. Fetch un-emailed posts with score >= MIN_SCORE
   const matches = await getPostsForEmailDigest(config.MIN_SCORE);
   console.log(
-    `📬 Email digest query: found ${matches.length} eligible posts (fitScore >= ${config.MIN_SCORE}, un-emailed), and ${otherLeads.length} other scanned leads.`,
+    `📬 Email digest query: found ${matches.length} eligible posts (fitScore >= ${config.MIN_SCORE}, un-emailed), ${otherLeads.length} other scanned leads, ${pipelineErrors.length} pipeline warning(s).`,
   );
 
-  if (matches.length === 0 && otherLeads.length === 0 && !config.ALWAYS_SEND) {
+  if (
+    matches.length === 0 &&
+    otherLeads.length === 0 &&
+    pipelineErrors.length === 0 &&
+    !config.ALWAYS_SEND
+  ) {
     console.log(
-      "ℹ️ No new matches or scanned leads to email today and ALWAYS_SEND=false. Skipping email.",
+      "ℹ️ No new matches, leads, or errors to email today and ALWAYS_SEND=false. Skipping email.",
     );
     return {
       emailSent: false,
@@ -102,11 +108,18 @@ export async function sendDailyDigest(
   }
 
   // 2. Generate HTML email content
-  const html = generateDigestHtml(matches, config.NEXT_PUBLIC_APP_URL, otherLeads);
+  const html = generateDigestHtml(
+    matches,
+    config.NEXT_PUBLIC_APP_URL,
+    otherLeads,
+    pipelineErrors,
+  );
   const subject =
-    matches.length > 0
-      ? `Hiring Radar: ${matches.length} match${matches.length === 1 ? "" : "es"} (${otherLeads.length} other scanned) - ${dateFormatted}`
-      : `Hiring Radar: 0 top matches (${otherLeads.length} leads scanned) - ${dateFormatted}`;
+    pipelineErrors.length > 0
+      ? `Hiring Radar: ${matches.length} match${matches.length === 1 ? "" : "es"} (${pipelineErrors.length} warning${pipelineErrors.length === 1 ? "" : "s"}) - ${dateFormatted}`
+      : matches.length > 0
+        ? `Hiring Radar: ${matches.length} match${matches.length === 1 ? "" : "es"} (${otherLeads.length} other scanned) - ${dateFormatted}`
+        : `Hiring Radar: 0 top matches (${otherLeads.length} leads scanned) - ${dateFormatted}`;
 
   // 3. Handle DRY_RUN mode: save to out/preview.html
   if (config.DRY_RUN) {
