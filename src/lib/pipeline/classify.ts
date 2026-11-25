@@ -103,16 +103,19 @@ function buildSystemInstruction(s: Settings | typeof EMPTY_SETTINGS): string {
 
   return `You evaluate LinkedIn posts and write job-application outreach emails on behalf of ONE candidate, described in <candidate_profile>.
 Goal:
-1. Determine if the post is a genuine active hiring offer and calculate an accurate fit score (1-10).
-2. If it is a hiring post with fitScore >= 5, YOU MUST DRAFT a tailored, specific, honest job application email (110 to 170 words) and subject line connecting the candidate's exact projects to the post's job description.
+1. Determine if the post is a genuine active hiring offer for a SOFTWARE CODING role (developer, engineer, programmer, DevOps, data engineer, AI/ML engineer). Non-coding roles (sales, CSR, marketing, HR, design, accounting, etc.) must ALWAYS be classified as isHiringPost: false, even if the employer is an IT/tech company.
+2. Calculate an accurate fit score (1-10) ONLY for coding roles.
+3. If it is a hiring post with fitScore >= 5, YOU MUST DRAFT a tailored, specific, honest job application email (110 to 170 words) and subject line connecting the candidate's exact projects to the post's job description.
 
 ## HARD RULES FOR CLASSIFICATION:
 1. isHiringPost:
-   - true for ANY genuine open job vacancy, developer internship, traineeship, or junior developer role offered by an employer, recruiter, founder, or recruitment community/portal (e.g. Intern Nepal, NecoJobs, InternSathi, SliceJob, TalentSathi).
-   - IMPORTANT ON HASHTAGS: Employers and recruiters frequently include the hashtag #opentowork or #hiringnow in their post hashtags to reach job seekers. DO NOT mark false just because #opentowork appears in the hashtags or URL. ONLY mark false if an individual job-seeker is writing in the first person ("I am looking for a job", "Hire me", "Recent graduate seeking an internship").
+   - true ONLY for genuine open vacancies for SOFTWARE ENGINEERING / CODING roles: developer, software engineer, programmer, DevOps, SRE, QA engineer (test automation), data engineer, data scientist, AI/ML engineer, or closely related technical roles where the primary job duty is writing code.
+   - This includes internships, traineeships, junior/mid/senior positions, freelance contracts, and roles posted by employers, recruiters, founders, or recruitment portals (e.g. Intern Nepal, NecoJobs, InternSathi, SliceJob, TalentSathi).
+   - IMPORTANT ON HASHTAGS: Employers and recruiters frequently include #opentowork or #hiringnow to reach job seekers. DO NOT mark false just because #opentowork appears. ONLY mark false if an individual job-seeker is writing in the first person ("I am looking for a job", "Hire me").
+   - MUST be false for ALL non-coding roles, even if the company is in the IT / tech / software industry. Specifically mark false for: sales, business development, CSR (customer service representative), marketing, digital marketing, content writing, graphic design, HR, accounting, finance, procurement, mechanical/civil/electrical engineering, administration, or any role where the primary duty is NOT writing software code.
    - false if the author is a candidate seeking a job ("I am looking for a job", "Open to work" written by a candidate).
    - false if the author is sharing career tips, motivational quotes, industry news, or personal achievements.
-   - false if an institute is purely selling paid training courses or tuition with no hiring offer ("Join our 3-month course for Rs. 15,000"). If a company or platform offers an internship (paid or unpaid) or trainee role, that IS an active hiring offer (true).
+   - false if an institute is purely selling paid training courses or tuition with no hiring offer ("Join our 3-month course for Rs. 15,000"). If a company or platform offers a coding internship (paid or unpaid), that IS an active hiring offer (true).
 2. applyMethod:
    - Extract the email address EXACTLY as written in the text (e.g. hr@company.com). Never invent, hallucinate, or guess emails.
    - If several emails, prefer the one next to words like apply, send CV, hr, careers.
@@ -120,7 +123,7 @@ Goal:
    - If there is an external application URL, set applyMethod.type to "link" and value to the link.
    - If no address or link is present, set applyMethod.type to "unknown" and value to null.
 3. Fit Scoring (1 to 10):
-   CRITICAL: The candidate explicitly wants ALL software developer / engineer internships to score at least 6 and be saved to the database.
+   CRITICAL: Only SOFTWARE CODING roles qualify for scoring. Non-coding roles (sales, CSR, marketing, HR, etc.) must NEVER reach this step — they should already be isHiringPost: false.
    - Score 9-10 (Direct domain match):
      * Junior/Mid Backend (NestJS, Node.js, PostgreSQL) or AI Engineer (FastAPI, Python, RAG, LLM) in Nepal or Remote.
      * Full-Stack Developer Intern / Junior matching candidate's core stack (Next.js, React, Node.js, TypeScript).
@@ -128,12 +131,13 @@ Goal:
    - Score 7-8 (Strong stack overlap):
      * Full-Stack TypeScript / Web developer roles, Python automation / n8n roles, or backend roles with slight stack overlap (Express, Django, Flask, Vue).
      * General Web Development Internships with JavaScript / TypeScript / Python.
-   - Score 6 (Mandatory baseline for ALL other developer internships):
-     * ALL other developer/engineering internships, traineeships, or fresher developer roles, EVEN in stacks outside candidate's expertise (e.g. Java / Spring Boot internship, PHP / Laravel internship, C# / .NET internship, Mobile / Flutter internship, Go internship, QA engineering internship). Every developer internship MUST score at least 6.
+   - Score 6 (Developer internship in a different coding stack):
+     * Coding internships or fresher developer roles in stacks outside the candidate's expertise but still software engineering (e.g. Java / Spring Boot internship, PHP / Laravel internship, C# / .NET internship, Mobile / Flutter internship, Go internship, QA automation internship).
    - Score 4-5:
-     * Mid-level roles requiring 3-4 years of experience, or non-intern roles with unrelated stacks.
+     * Mid-level coding roles requiring 3-4 years of experience, or coding roles with unrelated stacks and no intern/junior openings.
    - Score 1-3:
-     * Senior / Lead / Staff roles requiring 5+ years of experience, or completely non-developer roles (e.g. graphics design, sales, non-tech content writing).
+     * Senior / Lead / Staff coding roles requiring 5+ years of experience.
+     * Any role that slipped through but is NOT actually a coding job.
 
 ## MANDATORY RULES FOR EMAIL DRAFTING (draftSubject, draftBody):
 CRITICAL REQUIREMENT:
