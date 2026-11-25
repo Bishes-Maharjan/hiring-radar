@@ -49,10 +49,11 @@ Goal:
 
 ## HARD RULES FOR CLASSIFICATION:
 1. isHiringPost:
-   - true ONLY if an employer, recruiter, or founder is offering an open role right now.
-   - false if the author is a candidate seeking a job ("I am looking for a job", "Open to work").
+   - true for ANY genuine open job vacancy, developer internship, traineeship, or junior developer role offered by an employer, recruiter, founder, or recruitment community/portal (e.g. Intern Nepal, NecoJobs, InternSathi, SliceJob, TalentSathi).
+   - IMPORTANT ON HASHTAGS: Employers and recruiters frequently include the hashtag #opentowork or #hiringnow in their post hashtags to reach job seekers. DO NOT mark false just because #opentowork appears in the hashtags or URL. ONLY mark false if an individual job-seeker is writing in the first person ("I am looking for a job", "Hire me", "Recent graduate seeking an internship").
+   - false if the author is a candidate seeking a job ("I am looking for a job", "Open to work" written by a candidate).
    - false if the author is sharing career tips, motivational quotes, industry news, or personal achievements.
-   - false if an agency or institute is promoting bootcamps, training programs, or courses ("Learn MERN with 100% placement").
+   - false if an institute is purely selling paid training courses or tuition with no hiring offer ("Join our 3-month course for Rs. 15,000"). If a company or platform offers an internship (paid or unpaid) or trainee role, that IS an active hiring offer (true).
 2. applyMethod:
    - Extract the email address EXACTLY as written in the text (e.g. hr@company.com). Never invent, hallucinate, or guess emails.
    - If several emails, prefer the one next to words like apply, send CV, hr, careers.
@@ -60,10 +61,20 @@ Goal:
    - If there is an external application URL, set applyMethod.type to "link" and value to the link.
    - If no address or link is present, set applyMethod.type to "unknown" and value to null.
 3. Fit Scoring (1 to 10):
-   - Score 9-10: Junior/Mid Backend (NestJS/Node/PostgreSQL) or AI Engineer (FastAPI/Python/RAG) in Nepal or Remote.
-   - Score 7-8: Full-Stack TypeScript/Next.js roles, Python automation/n8n roles, or backend roles with slight stack overlap.
-   - Score 4-6: Mid-level roles requiring 3-4 years, or related technologies.
-   - Score 1-3: Senior/Lead roles requiring 5+ years of experience, or completely unrelated technology stacks (e.g. Enterprise Java/Spring, PHP/WordPress, Ruby, Embedded C++).
+   CRITICAL: The candidate explicitly wants ALL software developer / engineer internships to score at least 6 and be saved to the database.
+   - Score 9-10 (Direct domain match):
+     * Junior/Mid Backend (NestJS, Node.js, PostgreSQL) or AI Engineer (FastAPI, Python, RAG, LLM) in Nepal or Remote.
+     * Full-Stack Developer Intern / Junior matching candidate's core stack (Next.js, React, Node.js, TypeScript).
+     * AI/ML Intern / Junior (Python, Whisper, RAG, LLM, Computer Vision).
+   - Score 7-8 (Strong stack overlap):
+     * Full-Stack TypeScript / Web developer roles, Python automation / n8n roles, or backend roles with slight stack overlap (Express, Django, Flask, Vue).
+     * General Web Development Internships with JavaScript / TypeScript / Python.
+   - Score 6 (Mandatory baseline for ALL other developer internships):
+     * ALL other developer/engineering internships, traineeships, or fresher developer roles, EVEN in stacks outside candidate's expertise (e.g. Java / Spring Boot internship, PHP / Laravel internship, C# / .NET internship, Mobile / Flutter internship, Go internship, QA engineering internship). Every developer internship MUST score at least 6.
+   - Score 4-5:
+     * Mid-level roles requiring 3-4 years of experience, or non-intern roles with unrelated stacks.
+   - Score 1-3:
+     * Senior / Lead / Staff roles requiring 5+ years of experience, or completely non-developer roles (e.g. graphics design, sales, non-tech content writing).
 
 ## MANDATORY RULES FOR EMAIL DRAFTING (draftSubject, draftBody):
 CRITICAL REQUIREMENT:
