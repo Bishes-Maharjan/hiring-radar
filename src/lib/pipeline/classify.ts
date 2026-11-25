@@ -61,6 +61,8 @@ export const CLASSIFICATION_RESPONSE_SCHEMA = {
           "applyMethod",
           "fitScore",
           "reason",
+          "draftSubject",
+          "draftBody",
         ],
       },
     },
