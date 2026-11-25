@@ -121,7 +121,7 @@ Return valid JSON adhering strictly to the response schema.`;
 }
 
 /**
- * Builds the user prompt containing the indexed list of posts.
+ * Builds the user prompt containing the indexed list of posts and exact schema instructions.
  */
 function buildBatchPrompt(posts: CandidatePost[]): string {
   const formatted = posts
@@ -136,7 +136,32 @@ ${p.snippet}
     )
     .join("\n\n");
 
-  return `Analyze the following ${posts.length} LinkedIn posts. For each post where isHiringPost is true and fitScore >= 5, YOU MUST draft a tailored draftSubject and draftBody (110-170 words) connecting the candidate profile to the post's job description. Return a JSON object with a "classifications" array containing one entry for each post index (0 to ${posts.length - 1}):\n\n${formatted}`;
+  return `Analyze the following ${posts.length} LinkedIn posts. For each post, return a JSON object with a "classifications" array containing one entry for each post index (0 to ${posts.length - 1}) strictly matching this structure:
+
+{
+  "classifications": [
+    {
+      "postIndex": 0,
+      "isHiringPost": true,
+      "role": "Exact role title (e.g. Full Stack Developer Intern)",
+      "company": "Company or poster name (e.g. Intern Nepal)",
+      "location": "Job location (e.g. Kathmandu, Nepal, or Remote)",
+      "workMode": "onsite" | "hybrid" | "remote" | "unknown",
+      "experienceLevel": "intern" | "junior" | "mid" | "senior" | "unknown",
+      "applyMethod": {
+        "type": "email" | "link" | "dm" | "unknown",
+        "value": "email address or URL or null"
+      },
+      "fitScore": 1 to 10,
+      "reason": "1-2 sentences explaining why this score was assigned",
+      "draftSubject": "Application email subject line (required if fitScore >= 5 and isHiringPost is true, else null)",
+      "draftBody": "110-170 word tailored cold application email (required if fitScore >= 5 and isHiringPost is true, else null)"
+    }
+  ]
+}
+
+POSTS TO EVALUATE:
+${formatted}`;
 }
 
 /**
@@ -178,7 +203,9 @@ export async function classifyBatch(
 
       console.warn(
         `⚠️ Attempt ${attempt} validation failed:`,
-        parsed.error.format(),
+        JSON.stringify(parsed.error.issues, null, 2),
+        "\nRaw text was:\n",
+        text,
       );
     } catch (err) {
       console.warn(`⚠️ Attempt ${attempt} error:`, err);

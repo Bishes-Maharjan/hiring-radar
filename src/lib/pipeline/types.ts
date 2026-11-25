@@ -43,19 +43,33 @@ export interface CandidatePost {
 // ==========================================
 // 3. LLM Structured Output Schema
 // ==========================================
-export const WorkModeSchema = z.enum(["onsite", "hybrid", "remote", "unknown"]);
+export const WorkModeSchema = z.preprocess((val) => {
+  if (typeof val === "string") {
+    const lower = val.toLowerCase().trim();
+    if (["onsite", "hybrid", "remote"].includes(lower)) return lower;
+  }
+  return val;
+}, z.enum(["onsite", "hybrid", "remote", "unknown"]));
 export type WorkMode = z.infer<typeof WorkModeSchema>;
 
-export const ExperienceLevelSchema = z.enum([
-  "intern",
-  "junior",
-  "mid",
-  "senior",
-  "unknown",
-]);
+export const ExperienceLevelSchema = z.preprocess((val) => {
+  if (typeof val === "string") {
+    const lower = val.toLowerCase().trim();
+    if (["intern", "junior", "mid", "senior"].includes(lower)) return lower;
+  }
+  return val;
+}, z.enum(["intern", "junior", "mid", "senior", "unknown"]));
 export type ExperienceLevel = z.infer<typeof ExperienceLevelSchema>;
 
-export const ApplyTypeSchema = z.enum(["email", "link", "dm", "unknown"]);
+export const ApplyTypeSchema = z.preprocess((val) => {
+  if (typeof val === "string") {
+    const lower = val.toLowerCase().trim();
+    if (lower === "email") return "email";
+    if (["link", "url", "linkedin", "website"].includes(lower)) return "link";
+    if (["dm", "message"].includes(lower)) return "dm";
+  }
+  return val;
+}, z.enum(["email", "link", "dm", "unknown"]));
 export type ApplyType = z.infer<typeof ApplyTypeSchema>;
 
 export const SingleClassificationResultSchema = z.object({
@@ -69,45 +83,59 @@ export const SingleClassificationResultSchema = z.object({
     ),
   role: z
     .string()
+    .default("Software Developer")
     .describe("Job title or role name (e.g., 'Node.js Backend Developer')"),
-  company: z.string().describe("Hiring organization or poster company"),
+  company: z
+    .string()
+    .default("Unknown Company")
+    .describe("Hiring organization or poster company"),
   location: z
     .string()
+    .default("Nepal / Remote")
     .describe(
       "Job location (e.g., 'Kathmandu, Nepal', 'Remote', or 'Unknown')",
     ),
-  workMode: WorkModeSchema.describe("onsite, hybrid, remote, or unknown"),
-  experienceLevel: ExperienceLevelSchema.describe(
+  workMode: WorkModeSchema.default("unknown").describe(
+    "onsite, hybrid, remote, or unknown",
+  ),
+  experienceLevel: ExperienceLevelSchema.default("unknown").describe(
     "intern, junior, mid, senior, or unknown",
   ),
-  applyMethod: z.object({
-    type: ApplyTypeSchema.describe("email, link, dm, or unknown"),
-    value: z
-      .string()
-      .nullable()
-      .describe("Exact email address, application URL, or null if none/dm"),
-  }),
+  applyMethod: z
+    .object({
+      type: ApplyTypeSchema.default("unknown"),
+      value: z
+        .string()
+        .nullable()
+        .default(null)
+        .describe("Exact email address, application URL, or null if none/dm"),
+    })
+    .default({ type: "unknown", value: null }),
   fitScore: z
     .number()
     .min(1)
     .max(10)
+    .default(5)
     .describe(
       "Match score from 1-10 for a junior developer in Kathmandu skilled in NestJS, Node.js, TypeScript, Python, FastAPI, and AI/RAG",
     ),
   reason: z
     .string()
+    .default("Matches developer skillset.")
     .describe(
       "1-2 sentences explaining why this score was assigned based on the candidate's skills and experience level",
     ),
   draftSubject: z
     .string()
     .nullable()
+    .default(null)
     .describe(
       "Professional cold outreach subject line tailored to the job description (e.g. 'Application: Junior Backend Engineer')",
     ),
   draftBody: z
     .string()
     .nullable()
+    .default(null)
     .describe(
       "Tailored 110-170 word cold email connecting candidate's specific projects (AideAscent NestJS, Danson AI/RAG, ERP) to the exact requirements in the job description",
     ),
