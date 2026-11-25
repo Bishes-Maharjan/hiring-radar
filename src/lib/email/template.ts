@@ -31,11 +31,14 @@ export function generateDigestHtml(
   const errorsHtml =
     pipelineErrors.length > 0
       ? `
-      <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px 14px; margin-bottom: 16px;">
-        <div style="font-size: 13px; font-weight: 700; color: #991b1b; margin-bottom: 6px;">
-          ⚠️ Pipeline Warnings & API Errors (${pipelineErrors.length})
+      <div style="background-color: #fef2f2; border: 2px solid #ef4444; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+        <div style="font-size: 14px; font-weight: 800; color: #991b1b; margin-bottom: 6px;">
+          🚨 Pipeline Run Failed / Encountered ${pipelineErrors.length} API Error(s)
         </div>
-        <ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #b91c1c; line-height: 1.5;">
+        <p style="font-size: 12px; color: #7f1d1d; margin: 0 0 8px 0;">
+          One or more external API calls (SerpApi or Gemini) failed during this run. Here is the exact failure log:
+        </p>
+        <ul style="margin: 0; padding-left: 18px; font-size: 11px; color: #991b1b; line-height: 1.5; font-family: monospace;">
           ${pipelineErrors
             .map(
               (e) =>
@@ -183,6 +186,11 @@ export function generateDigestHtml(
                   ⚡ Hiring Radar Daily Digest
                 </h1>
                 <div style="font-size: 12px; color: #94a3b8;">
+                  ${
+                    pipelineErrors.length > 0
+                      ? `<span style="display: inline-block; background-color: #ef4444; color: #ffffff; padding: 1px 6px; border-radius: 4px; font-weight: 700; margin-right: 6px;">FAILED</span>`
+                      : ""
+                  }
                   <strong style="color: #38bdf8;">${posts.length} relevant match${posts.length === 1 ? "" : "es"}</strong> &bull; ${otherLeads.length} other scanned &bull; ${dateFormatted}
                 </div>
               </td>

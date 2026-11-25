@@ -88,7 +88,7 @@ describe("Email Digest Generation", () => {
 
     const html = generateDigestHtml([], "http://localhost:3000", [], errors);
 
-    expect(html).toContain("Pipeline Warnings & API Errors (2)");
+    expect(html).toContain("Pipeline Run Failed / Encountered 2 API Error(s)");
     expect(html).toContain("HTTP 429 Too Many Requests");
     expect(html).toContain("Gemini batch error: Resource exhausted");
   });

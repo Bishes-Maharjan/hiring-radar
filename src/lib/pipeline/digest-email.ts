@@ -116,7 +116,7 @@ export async function sendDailyDigest(
   );
   const subject =
     pipelineErrors.length > 0
-      ? `Hiring Radar: ${matches.length} match${matches.length === 1 ? "" : "es"} (${pipelineErrors.length} warning${pipelineErrors.length === 1 ? "" : "s"}) - ${dateFormatted}`
+      ? `🚨 [FAILED] Hiring Radar: ${pipelineErrors.length} API error(s) occurred - ${dateFormatted}`
       : matches.length > 0
         ? `Hiring Radar: ${matches.length} match${matches.length === 1 ? "" : "es"} (${otherLeads.length} other scanned) - ${dateFormatted}`
         : `Hiring Radar: 0 top matches (${otherLeads.length} leads scanned) - ${dateFormatted}`;
