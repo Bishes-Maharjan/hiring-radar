@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { getConfig } from "./config";
 import {
   CandidatePost,
@@ -8,6 +8,65 @@ import {
 } from "./types";
 import { getSettings, EMPTY_SETTINGS } from "../db/repository";
 import { Settings } from "@prisma/client";
+
+/**
+ * Strict response schema for Gemini Structured Output (Grammar-Constrained Decoding).
+ * Prevents hallucinations, missing fields, or invalid enum values at the token generation level.
+ */
+export const CLASSIFICATION_RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    classifications: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          postIndex: { type: Type.INTEGER },
+          isHiringPost: { type: Type.BOOLEAN },
+          role: { type: Type.STRING },
+          company: { type: Type.STRING },
+          location: { type: Type.STRING },
+          workMode: {
+            type: Type.STRING,
+            enum: ["onsite", "hybrid", "remote", "unknown"],
+          },
+          experienceLevel: {
+            type: Type.STRING,
+            enum: ["intern", "junior", "mid", "senior", "unknown"],
+          },
+          applyMethod: {
+            type: Type.OBJECT,
+            properties: {
+              type: {
+                type: Type.STRING,
+                enum: ["email", "link", "dm", "unknown"],
+              },
+              value: { type: Type.STRING, nullable: true },
+            },
+            required: ["type"],
+          },
+          fitScore: { type: Type.INTEGER },
+          reason: { type: Type.STRING },
+          draftSubject: { type: Type.STRING, nullable: true },
+          draftBody: { type: Type.STRING, nullable: true },
+        },
+        required: [
+          "postIndex",
+          "isHiringPost",
+          "role",
+          "company",
+          "location",
+          "workMode",
+          "experienceLevel",
+          "applyMethod",
+          "fitScore",
+          "reason",
+        ],
+      },
+    },
+  },
+  required: ["classifications"],
+};
 
 /**
  * Builds the system instruction dynamically from the user's settings.
@@ -173,7 +232,7 @@ export async function classifyBatch(
   modelName: string,
   systemInstruction?: string,
 ): Promise<BatchClassificationResponse | null> {
-  const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey, apiVersion: "v1beta" });
   const prompt = buildBatchPrompt(batch);
   const sysPrompt = systemInstruction ?? buildSystemInstruction(EMPTY_SETTINGS);
 
@@ -190,6 +249,8 @@ export async function classifyBatch(
           systemInstruction: sysPrompt,
           temperature: 0.1,
           responseMimeType: "application/json",
+          responseSchema: CLASSIFICATION_RESPONSE_SCHEMA,
+          thinkingConfig: { thinkingBudget: 0 },
         },
       });
 
